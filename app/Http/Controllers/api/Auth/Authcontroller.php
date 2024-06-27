@@ -13,7 +13,7 @@ class AuthController extends Controller
 {
     public function login(LoginRequest $request) : JsonResponse
     {
-    
+    //authentifie la personne avec l'email et password er retourne le token d'acces et c'est info
         $request->authenticate();
 
         $user = auth()->user();
@@ -27,6 +27,7 @@ class AuthController extends Controller
     }
     public function register(Request $request) : JsonResponse
     {
+        //utilise tous les attribus ci dessous pour creer un nouveau utilisateur
         $validate = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
@@ -55,6 +56,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        //supprime le token d'acces de l'utlisateur qui ce deconnecte
         $user = $request->user();
         if($user)
         {
@@ -75,6 +77,8 @@ class AuthController extends Controller
 
     public function loginAdmin(Request $request) 
     {
+
+        //se connecte avec email et password si l'utilisateur est admin le laisse passer sinon 401
         $validate = Validator::make($request->all(), [ 
             'email'=> 'required|string|email',
             'password'=> 'required|string',

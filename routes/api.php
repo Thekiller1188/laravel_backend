@@ -15,117 +15,190 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
- //routes not finished this is all i got for now
+########################################################### MESSAGE ###########################################################
+//j'ais utiliser middleware pour proteger mes route et pour verifier si l'utilisateur avais accesser a cette fonction
+
+//formation => course
+
+//MERCI
+########################################################### MESSAGE ###########################################################
 
 
-//Login and register routes
-   //input => email, 
-   //output => token+user info ,token is needed for request with middleware
+
+
+
+########################################################### AUTHENTIFICATION ###########################################################
+
+// authentification utilisateur (user)
 Route::post('/login',[AuthController::class, 'login']);
-
-   //input => email,name,password
-   //output => creat user and give info
 Route::post('/register',[AuthController::class, 'register']);
 
+
+
+// authentification utilisateur (admin)
 Route::post('/admin/login', [AuthController::class,'loginAdmin']);
 
+
+// deconnexion de l'utilisateur (admin+user)
 Route::middleware('auth:sanctum')->post('/logout',[AuthController::class,'logout']);
 
 
+########################################################### AUTHENTIFICATION ###########################################################
 
 
-## NOT FOR MOBILE
-//fetching videos and managing them routes
-     //input => token,name,video(file mp4),course_id
-     //output => creating a video linked to the course
+
+
+
+
+########################################################### MANAGMENT DES VIDEO ###########################################################
+
+
+ //route pour ajouter une video a une formation specifique
 Route::middleware('auth:sanctum')->post('/video/add',[VideoControllerDefault::class,'upload']);
-     //input => {videoname} in the link add the token too to check if the user has access to the video
-     //output => the video
+
+
+//route pour streamer une video specifique si la personne a acheter la formation associer
 Route::middleware('auth:sanctum')->get('/watch/{videoname}',[VideoControllerDefault::class,'show']);
-     //input => add the {id} of the video u want to modify and u can modify the position of the ideo in the course by adding position 
-     //output => the modified video 
+
+
+//route pour changer les attribus de la video nom,video,position de la video dans la formation
 Route::middleware('auth:sanctum')->post('/videos/{id}/update',[VideoControllerDefault::class,'update']);
-## NOT FOR MOBILE
+
+
+//route pour avoir les information d'une video specifique nom,le chemin de la video...
 Route::middleware('auth:sanctum')->get('/videos/{id}',[VideoControllerDefault::class,'info']);
+
+
+//route pour supprimer une video si supprimer update la durrer de la formation
 Route::middleware('auth:sanctum')->post('/video/remove/{id}',[VideoControllerDefault::class,'destroy']);
 
+########################################################### MANAGMENT DES VIDEO ###########################################################
 
 
 
+########################################################### ROUTE UTILISATEUR ###########################################################
 
-//user profile update 
-  //input => token, the modified fields 
-  //output => the modified user
+//route pour changer les attribus de l'utilisateur authentifier
 Route::middleware('auth:sanctum')->post('/user/update',[UserController::class,'update']);
+
+//route pour changer le mot de passe de l'utilisateur authentifier
 Route::middleware('auth:sanctum')->post('/user/password/update',[UserController::class,'updatepassword']);
-  //input => token
-  //output => user info
+
+//pour avoir les info de l'utilisateur authentifier
 Route::middleware('auth:sanctum')->get('/user/info',[UserController::class,'userinf']);
 
+//pour avoir les formation acheter par l'utilisateur authentifier
 Route::middleware('auth:sanctum')->get('/user/courses',[UserController::class,'usercourses']);
 
+//pour avoir les info de toutes les video dans une formation si l'utilisateur la acheter au prealable
 Route::middleware('auth:sanctum')->get('/user/courses/{courseId}/videos',[UserController::class,'courseVideos']);
 
+
+//route pour l'admin qui donne tous les utilisateur inscris
 Route::middleware('auth:sanctum')->get('/users/index',[UserController::class,'userindex']);
-Route::post('/courses/search/{name}',[CourseController::class,'search']);
 
-
-
-
-## not for mobile
-//course managment 
-
-Route::get('/courses',[CourseController::class,'index']);
-Route::get('/courses/{id}',[CourseController::class,'indexId']);
-Route::middleware('auth:sanctum')->get('/courses/{id}/videos',[CourseController::class,'coursesvideos']);
-Route::middleware('auth:sanctum')->post('/courses/add',[CourseController::class,'add']);
-Route::middleware('auth:sanctum')->post('/courses/{id}/remove',[CourseController::class, 'remove']);
-Route::middleware('auth:sanctum')->post('/courses/{id}/update',[CourseController::class, 'update']);
-Route::get('/images/{name}',[CourseController::class,'picindex']);
-## not for mobile
-
-//category managment
-   //input => name,token
-   //output => create a category
-Route::get('/category',[CategoryController::class,'index']);
-Route::get('/category/{id}',[CategoryController::class,'indexId']);
-Route::middleware('auth:sanctum')->post('/category/add',[CategoryController::class,'add']);
-   //input => name,token
-   //output => update the category of {id}
-Route::middleware('auth:sanctum')->post('/category/{id}/update',[CategoryController::class, 'update']);
-   //input => name,token
-   //output => remove the category of {id}
-Route::middleware('auth:sanctum')->post('/category/{id}/remove',[CategoryController::class, 'destroy']);
-
-Route::get('categories/{categoryId}/courses', [CourseController::class,'getCoursesByCategory']);
-
-## not for mobile
-
-
-
-//checkout and payment
-
-     //input => token, (optional)card number (12 digits), course_id in an array 
-     //output => buy all the courses in the array
+//utiliser pour acheter les formationd dans le cart j'avais fait un systeme qui detecte si la carte etais une visa ou mastercar
+//mais j'ai du les supprimer car on avais pas le temp
 Route::middleware('auth:sanctum')->post('/user/checkout', [CheckoutController::class, 'store']);
 
-## optional for mobile
-//reset password routes
-  //input => email
-  //output => send an reset password email if the email exists 
+//verifie le role de l'utilisateur si admin retourne 200 sinon 401
+Route::middleware('auth:sanctum')->get('/user/role', [UserController::class,'rolecheck']);
+
+//pour l'admin retourne tous les historique d'achat de tous les utilisateur
+Route::middleware('auth:sanctum')->get('/invoices', [UserController::class,'indexInvoice']);
+
+//retourne l'historique de l'utilisateur authentifier
+Route::middleware('auth:sanctum')->get('/user/history', [UserController::class,'userInvoices']);
+
+########################################################### ROUTE UTILISATEUR ###########################################################
+
+
+
+
+
+
+
+
+########################################################### MANAGMENT DES COURSE ###########################################################
+
+
+//pour avoir toutes les course existante na pas besoin d'authentification
+Route::get('/courses',[CourseController::class,'index']);
+
+//utiliser par la search bar de react pour retouner les formation qui ressemble a l'input envoyer (cherche avec le nom)
+Route::post('/courses/search/{name}',[CourseController::class,'search']);
+
+//retourne lES info de la  formation avec l'id envoyer 
+Route::get('/courses/{id}',[CourseController::class,'indexId']);
+
+//donne les video de la formation avec le meme id marche que pour l'admin
+Route::middleware('auth:sanctum')->get('/courses/{id}/videos',[CourseController::class,'coursesvideos']);
+
+//ajoute une nouvelle formation marche que pour l'admin
+Route::middleware('auth:sanctum')->post('/courses/add',[CourseController::class,'add']);
+
+//supprime une formation marche que pour l'admin
+Route::middleware('auth:sanctum')->post('/courses/{id}/remove',[CourseController::class, 'remove']);
+
+//change les attribus d'une formation deja existante marche que pour l'admin
+Route::middleware('auth:sanctum')->post('/courses/{id}/update',[CourseController::class, 'update']);
+
+//permet d'acceder au photo de l'application
+Route::get('/images/{name}',[CourseController::class,'picindex']);
+
+########################################################### MANAGMENT DES COURSE ###########################################################
+
+
+
+
+
+
+
+########################################################### MANAGMENT DES CATEGORIE ###########################################################
+
+//route qui donne toute les categorie existante
+Route::get('/category',[CategoryController::class,'index']);
+
+//route qui donne les info de la categorie avec l'id envoyer
+Route::get('/category/{id}',[CategoryController::class,'indexId']);
+
+//ajoute une nouvelle categorie 
+Route::middleware('auth:sanctum')->post('/category/add',[CategoryController::class,'add']);
+ 
+//change les attribus d'une categorie existante
+Route::middleware('auth:sanctum')->post('/category/{id}/update',[CategoryController::class, 'update']);
+
+//supprime une categorie ne peux pas supprimer si l'id == 1 car normalment la premiere categorie et la categorie other donc non supprimable
+Route::middleware('auth:sanctum')->post('/category/{id}/remove',[CategoryController::class, 'destroy']);
+
+//donne les fomation sous la category avec la meme id pas utiliser car react filtre localment par categorie
+Route::get('categories/{categoryId}/courses', [CourseController::class,'getCoursesByCategory']);
+
+
+##################################################### MANAGMENT DES CATEGORIE #####################################################
+
+
+
+
+
+
+##################################################### ROUTE NON IMPLEMETER MAIS FONCTIONEL #####################################################
+
+
+//non utiliser mais fonctionel sur postman envoie un email avec un lien de resetpassword http://127.0.0.1:3000/resetpassword/{token}
+//le token etais generer est enregistrer dans la base de donner 
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-  //input => password(confirm the password in you app), resetpassword's (token)
+
+
+//non utiliser mais fonctionel pour changer son mot de passe si le token est envoyer avec
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 
+##################################################### ROUTE NON IMPLEMETER MAIS FONCTIONEL #####################################################
 
 
 
-Route::middleware('auth:sanctum')->get('/user/role', [UserController::class,'rolecheck']);
 
-Route::middleware('auth:sanctum')->get('/invoices', [UserController::class,'indexInvoice']);
-
-Route::middleware('auth:sanctum')->get('/user/history', [UserController::class,'userInvoices']);
 
 
 

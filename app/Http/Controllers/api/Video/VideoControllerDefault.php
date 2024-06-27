@@ -16,6 +16,9 @@ class VideoControllerDefault extends Controller
 {
     public function upload(Request $request)
     {
+        //cette fonction ne va pas marcher car j'ai utiliser un outil externe pour avoir la durer de la video ffmpeg et ffprobe
+        //si vous voulez quelle fonctionne installer et indexer la 
+        //la fonction upload une nouvelle video avec un nom est une formation attribuer et donne une durer
         if ($request->user()->role == "user") {
             return response()->json([
                 "status" => 400,
@@ -24,7 +27,7 @@ class VideoControllerDefault extends Controller
         } else if ($request->user()->role == "admin") {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string',
-                'video' => 'required|mimes:mp4,mov,avi,wmv|max:102400', // Adjust max file size as per your requirement
+                'video' => 'required|mimes:mp4,mov,avi,wmv|max:102400', 
                 'course_id' => 'required|integer',
             ]);
 
@@ -39,13 +42,14 @@ class VideoControllerDefault extends Controller
             
             
             
-            // Retrieve the course instance
             if($course = Course::find($request->course_id))
             {
                 $video = new Video();
             $video->name = $request->name;
             $video->path = $videoName;
-            // Check if there are any videos related to the course
+
+
+
             if ($course->videos()->count() > 0) {
                 $video->position = $course->videos()->orderBy('position')->max('position') + 1;
             } else {
@@ -53,23 +57,21 @@ class VideoControllerDefault extends Controller
             }
             $request->video->move(resource_path('videos'), $videoName);
             
-            // Initialize FFMpeg with specified paths
             $ffmpeg = FFMpeg::create([
-                'ffmpeg.binaries' => 'C:/ffmpeg-7.0.1-essentials_build/bin/ffmpeg.exe', // Adjust the path as needed
-                'ffprobe.binaries' => 'C:/ffmpeg-7.0.1-essentials_build/bin/ffprobe.exe', // Adjust the path as needed
+                'ffmpeg.binaries' => 'C:/ffmpeg-7.0.1-essentials_build/bin/ffmpeg.exe',
+                'ffprobe.binaries' => 'C:/ffmpeg-7.0.1-essentials_build/bin/ffprobe.exe', 
             ]);
             
-            // Get the full path of the uploaded video
+
             $videoPath = resource_path('videos/' . $videoName);
-            
-            // Open the video file
+
             $videoFile = $ffmpeg->open($videoPath);
             
-            // Get the duration in seconds
+
             $duration = $videoFile->getFFProbe()->format($videoPath)->get('duration');
             
             $video->course_id = $request->course_id;
-            $video->duration = $duration; // Assuming you have a duration field in your videos table
+            $video->duration = $duration; 
             $video->save();
             
             $course->duration += $duration;
@@ -89,6 +91,8 @@ class VideoControllerDefault extends Controller
     }
 
     public function show(Request $request, $videoname){
+
+        //affiche la video si il a acheter la formation associer et si admin le laisse regarder
         if ($request->user()->role == "user") {
         $userid = $request->user()->id;
         $useracss = User::find($userid)->purchases()->with('items.courses.videos')->get()->pluck('items')->flatten()->pluck('courses')->flatten()->pluck('videos')->unique();
@@ -124,6 +128,7 @@ class VideoControllerDefault extends Controller
     }
 
     public function info(Request $request, $id){
+        //regarde les info d'une video specifique si admin
         if ($request->user()->role == 'user') {
             return response()->json([
                 'error'=> 'you dont have the autorization to do that',
@@ -147,6 +152,7 @@ class VideoControllerDefault extends Controller
     } 
     public function update(Request $request, $id)
     {
+        //update la video si la video change update la durer dans la formation associer
     if ($request->user()->role == "user") {
         return response()->json([
             "message" => "You do not have the permission to do that"
@@ -244,7 +250,7 @@ class VideoControllerDefault extends Controller
 
 
 public function destroy(Request $request,$id){
-
+//supprime la video si admin
  if($request->user()->role =='admin'){
 
     $video = Video::findOrFail( $id );
